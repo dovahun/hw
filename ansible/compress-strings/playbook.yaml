@@ -1,0 +1,20 @@
+---
+- name: Compress string using RLE
+  hosts: localhost
+  become: true
+  vars:
+    temp_string: "AAAAABBDCAAADDDDBC"
+  
+  tasks:
+    - name: Compress string using RLE in Jinja2
+      template:
+        src: templates/compress_script.j2
+        dest: compress_script.py
+
+    - name: print string
+      ansible.builtin.script: compress_script.py
+      args:
+        executable: python3
+      register: output
+    
+    - debug: var=output.stdout_lines[0]

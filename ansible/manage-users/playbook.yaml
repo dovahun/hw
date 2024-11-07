@@ -1,0 +1,28 @@
+---
+- hosts: "test"
+  become: yes
+  vars:
+    userInfo:
+    - name: user
+      password_b64: cXdlQVNEIUAjCg== #qweASD!@# в формате base64
+    - name: user1
+      password_b64: cXdlQVNEIUAjCg== #qweASD!@# в формате base64
+    path_to_user_template: "tempaltes/sudoers.d/user_template.j2"
+    path_to_dest_etc_sudoers: "/etc/sudoers.d/"
+
+  tasks:
+  - name: "create user"
+    ansible.builtin.user:
+      name: "{{ item.name }}"
+      password: "{{ item.password_b64 | b64decode | trim | password_hash('sha512') }}"
+      shell: /bin/bash
+      create_home: yes
+      state: present
+    with_items: "{{ userInfo }}"
+
+  - name: "add user to sudo"
+    ansible.builtin.copy:
+      dest: "{{ path_to_dest_etc_sudoers }}/{{ item.name }}"
+      content: "{{ item.name }} ALL=(ALL) NOPASSWORD: ALL"
+      mode: '0440'
+    with_items: "{{ userInfo }}"
